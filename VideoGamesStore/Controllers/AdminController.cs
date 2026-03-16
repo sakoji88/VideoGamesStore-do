@@ -35,6 +35,62 @@ public class AdminController : Controller
         return View(model);
     }
 
+
+    public async Task<IActionResult> Reviews(bool pendingOnly = true)
+    {
+        var query = _context.Reviews
+            .Include(r => r.Game)
+            .Include(r => r.User)
+            .AsQueryable();
+
+        if (pendingOnly)
+        {
+            query = query.Where(r => !r.IsApproved);
+        }
+
+        var model = await query
+            .OrderByDescending(r => r.CreatedAt)
+            .Select(r => new AdminReviewViewModel
+            {
+                Id = r.Id,
+                GameId = r.GameId,
+                GameTitle = r.Game.Title,
+                Username = r.User.Username,
+                Rating = r.Rating,
+                Comment = r.Comment,
+                CreatedAt = r.CreatedAt,
+                IsApproved = r.IsApproved
+            })
+            .ToListAsync();
+
+        ViewBag.PendingOnly = pendingOnly;
+        return View(model);
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> ApproveReview(int id)
+    {
+        var review = await _context.Reviews.FirstOrDefaultAsync(r => r.Id == id);
+        if (review is null) return NotFound();
+
+        review.IsApproved = true;
+        await _context.SaveChangesAsync();
+        TempData["Success"] = "Отзыв подтвержден и опубликован.";
+        return RedirectToAction(nameof(Reviews));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteReview(int id)
+    {
+        var review = await _context.Reviews.FirstOrDefaultAsync(r => r.Id == id);
+        if (review is null) return NotFound();
+
+        _context.Reviews.Remove(review);
+        await _context.SaveChangesAsync();
+        TempData["Success"] = "Отзыв удален.";
+        return RedirectToAction(nameof(Reviews));
+    }
+
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> ToggleBan(int id)
     {

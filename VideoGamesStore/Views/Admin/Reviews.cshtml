@@ -1,0 +1,64 @@
+@model IEnumerable<VideoGamesStore.ViewModels.Admin.AdminReviewViewModel>
+@{
+    ViewData["Title"] = "Модерация отзывов";
+    var pendingOnly = (bool?)ViewBag.PendingOnly ?? true;
+}
+<h2 class="mb-3">Модерация отзывов</h2>
+
+<div class="d-flex gap-2 mb-3">
+    <a asp-action="Reviews" asp-route-pendingOnly="true" class="btn @(pendingOnly ? "btn-primary" : "btn-outline-light")">На подтверждение</a>
+    <a asp-action="Reviews" asp-route-pendingOnly="false" class="btn @(!pendingOnly ? "btn-primary" : "btn-outline-light")">Все отзывы</a>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-dark table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Игра</th>
+                <th>Пользователь</th>
+                <th>Оценка</th>
+                <th>Комментарий</th>
+                <th>Статус</th>
+                <th>Дата</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var review in Model)
+        {
+            <tr>
+                <td><a asp-controller="Games" asp-action="Details" asp-route-id="@review.GameId">@review.GameTitle</a></td>
+                <td>@review.Username</td>
+                <td>@review.Rating/10</td>
+                <td>@(string.IsNullOrWhiteSpace(review.Comment) ? "—" : review.Comment)</td>
+                <td>
+                    @if (review.IsApproved)
+                    {
+                        <span class="badge bg-success">Опубликован</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning text-dark">Ожидает подтверждения</span>
+                    }
+                </td>
+                <td>@review.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                <td class="d-flex gap-2">
+                    @if (!review.IsApproved)
+                    {
+                        <form asp-action="ApproveReview" method="post">
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="id" value="@review.Id" />
+                            <button class="btn btn-sm btn-success">Подтвердить</button>
+                        </form>
+                    }
+                    <form asp-action="DeleteReview" method="post" onsubmit="return confirm('Удалить отзыв?');">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="id" value="@review.Id" />
+                        <button class="btn btn-sm btn-danger">Удалить</button>
+                    </form>
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
