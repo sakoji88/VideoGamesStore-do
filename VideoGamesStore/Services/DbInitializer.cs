@@ -9,6 +9,15 @@ public static class DbInitializer
     {
         await context.Database.EnsureCreatedAsync();
 
+        await context.Database.ExecuteSqlRawAsync(@"
+IF OBJECT_ID(N'dbo.Reviews', N'U') IS NOT NULL
+AND COL_LENGTH(N'dbo.Reviews', N'IsApproved') IS NULL
+BEGIN
+    ALTER TABLE dbo.Reviews
+    ADD IsApproved bit NOT NULL
+        CONSTRAINT DF_Reviews_IsApproved DEFAULT(0);
+END");
+
         var userRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "User");
         if (userRole is null)
         {
