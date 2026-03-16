@@ -16,6 +16,10 @@
                 : normalizedCover.StartsWith("images/", StringComparison.OrdinalIgnoreCase)
                     ? $"/{normalizedCover}"
                     : $"/images/games/{normalizedCover.TrimStart('/')}";
+
+    var reviewsToShow = User.IsInRole("Admin")
+        ? Model.Reviews.OrderByDescending(r => r.CreatedAt).ToList()
+        : Model.Reviews.Where(r => r.IsApproved).OrderByDescending(r => r.CreatedAt).ToList();
 }
 <div class="row g-4">
     <div class="col-md-5">
@@ -36,4 +40,64 @@
             </div>
         }
     </div>
+</div>
+
+<hr class="my-4" />
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <h3 class="mb-3">Отзывы</h3>
+        @if (!reviewsToShow.Any())
+        {
+            <p class="text-secondary">Пока нет опубликованных отзывов.</p>
+        }
+        else
+        {
+            <div class="d-flex flex-column gap-3">
+                @foreach (var review in reviewsToShow)
+                {
+                    <div class="review-card p-3 rounded">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong>@review.User.Username</strong>
+                            <span class="badge bg-primary">@review.Rating/10</span>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(review.Comment))
+                        {
+                            <p class="mb-1 mt-2">@review.Comment</p>
+                        }
+                        <small class="text-secondary">@review.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</small>
+                        @if (User.IsInRole("Admin") && !review.IsApproved)
+                        {
+                            <div><span class="badge bg-warning text-dark mt-2">Ожидает подтверждения</span></div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <div class="col-lg-6">
+            <h3 class="mb-3">Оставить отзыв</h3>
+            <form asp-action="AddReview" method="post" class="review-card p-3 rounded">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="gameId" value="@Model.Id" />
+
+                <div class="mb-3">
+                    <label class="form-label">Оценка (1-10)</label>
+                    <input type="number" name="rating" min="1" max="10" class="form-control" required />
+                    <div class="form-text">Пример: 9</div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Комментарий</label>
+                    <textarea name="comment" class="form-control" rows="4" maxlength="1000" placeholder="Что вам понравилось или не понравилось?"></textarea>
+                    <div class="form-text">Пример: Отличная оптимизация и интересный сюжет.</div>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Отправить на модерацию</button>
+            </form>
+        </div>
+    }
 </div>

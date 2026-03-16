@@ -15,10 +15,13 @@ public partial class Review
 
     public int GameId { get; set; }
 
+    [Range(1, 10, ErrorMessage = "Оценка должна быть от 1 до 10.")]
     public int Rating { get; set; }
 
-    [StringLength(1000)]
+    [StringLength(1000, ErrorMessage = "Отзыв не должен быть длиннее 1000 символов.")]
     public string? Comment { get; set; }
+
+    public bool IsApproved { get; set; }
 
     [Column(TypeName = "datetime")]
     public DateTime CreatedAt { get; set; }

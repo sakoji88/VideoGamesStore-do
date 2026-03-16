@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -48,9 +49,47 @@ public class GamesController : Controller
     public async Task<IActionResult> Details(int? id)
     {
         if (id is null) return NotFound();
-        var game = await _context.Games.Include(g => g.Genre).Include(g => g.Publisher).Include(g => g.Platforms).FirstOrDefaultAsync(g => g.Id == id);
+        var game = await _context.Games
+            .Include(g => g.Genre)
+            .Include(g => g.Publisher)
+            .Include(g => g.Platforms)
+            .Include(g => g.Reviews)
+                .ThenInclude(r => r.User)
+            .FirstOrDefaultAsync(g => g.Id == id);
+
         if (game is null || (!game.IsActive && !User.IsInRole("Admin"))) return NotFound();
         return View(game);
+    }
+
+    [Authorize]
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddReview(int gameId, int rating, string? comment)
+    {
+        var game = await _context.Games.FirstOrDefaultAsync(g => g.Id == gameId && g.IsActive);
+        if (game is null) return NotFound();
+
+        if (rating < 1 || rating > 10)
+        {
+            TempData["Error"] = "Оценка должна быть от 1 до 10.";
+            return RedirectToAction(nameof(Details), new { id = gameId });
+        }
+
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!int.TryParse(userIdClaim, out var userId)) return Forbid();
+
+        _context.Reviews.Add(new Review
+        {
+            GameId = gameId,
+            UserId = userId,
+            Rating = rating,
+            Comment = string.IsNullOrWhiteSpace(comment) ? null : comment.Trim(),
+            CreatedAt = DateTime.UtcNow,
+            IsApproved = false
+        });
+
+        await _context.SaveChangesAsync();
+        TempData["Success"] = "Спасибо! Отзыв отправлен на модерацию.";
+        return RedirectToAction(nameof(Details), new { id = gameId });
     }
 
     [Authorize(Roles = "Admin")]

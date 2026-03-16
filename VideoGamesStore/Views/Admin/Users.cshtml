@@ -1,6 +1,9 @@
 @model IEnumerable<VideoGamesStore.ViewModels.Admin.UserManagementViewModel>
 @{ ViewData["Title"] = "Управление пользователями"; }
-<h2 class="mb-3">Управление пользователями</h2>
+<div class="d-flex justify-content-between align-items-center mb-3">
+<h2 class="mb-0">Управление пользователями</h2>
+<a class="btn btn-outline-light" asp-action="Reviews">Модерация отзывов</a>
+</div>
 <form method="get" class="row g-2 mb-3"><div class="col-md-5"><input class="form-control" name="search" value="@ViewBag.Search" placeholder="Поиск по логину/email" /></div><div class="col-md-2"><button class="btn btn-outline-light w-100">Найти</button></div></form>
 <div class="table-responsive"><table class="table table-dark table-hover align-middle"><thead><tr><th>Пользователь</th><th>Email</th><th>Роль</th><th>Статус</th><th></th></tr></thead><tbody>
 @foreach (var user in Model) {
