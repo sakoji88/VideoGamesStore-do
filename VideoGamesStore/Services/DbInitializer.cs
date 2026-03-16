@@ -18,6 +18,29 @@ BEGIN
         CONSTRAINT DF_Reviews_IsApproved DEFAULT(0);
 END");
 
+        await context.Database.ExecuteSqlRawAsync(@"
+IF OBJECT_ID(N'dbo.Reviews', N'U') IS NOT NULL
+BEGIN
+    DECLARE @sql nvarchar(max) = N'';
+
+    SELECT @sql = @sql + N'ALTER TABLE dbo.Reviews DROP CONSTRAINT [' + cc.name + N'];'
+    FROM sys.check_constraints cc
+    WHERE cc.parent_object_id = OBJECT_ID(N'dbo.Reviews')
+      AND (
+           cc.name LIKE N'CK__Reviews__Rating%'
+           OR cc.name = N'CK_Reviews_Rating'
+           OR cc.definition LIKE N'%Rating%'
+      );
+
+    IF LEN(@sql) > 0
+    BEGIN
+        EXEC sp_executesql @sql;
+    END
+
+    ALTER TABLE dbo.Reviews
+    ADD CONSTRAINT CK_Reviews_Rating CHECK ([Rating] >= 1 AND [Rating] <= 10);
+END");
+
         var userRole = await context.Roles.FirstOrDefaultAsync(r => r.Name == "User");
         if (userRole is null)
         {
