@@ -254,9 +254,17 @@ public class GamesController : Controller
     [HttpPost, ActionName("Delete"), ValidateAntiForgeryToken]
     public async Task<IActionResult> DeleteConfirmed(int id)
     {
-        var game = await _context.Games.Include(g => g.Platforms).FirstOrDefaultAsync(g => g.Id == id);
+        var game = await _context.Games
+            .Include(g => g.Platforms)
+            .Include(g => g.Reviews)
+            .FirstOrDefaultAsync(g => g.Id == id);
         if (game is not null)
         {
+            if (game.Reviews.Count > 0)
+            {
+                _context.Reviews.RemoveRange(game.Reviews);
+            }
+
             game.Platforms.Clear();
             _context.Games.Remove(game);
             await _context.SaveChangesAsync();
