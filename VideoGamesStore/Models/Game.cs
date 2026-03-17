@@ -8,7 +8,7 @@ public partial class Game
     [Key]
     public int Id { get; set; }
 
-    [Display(Name = "ID в RAWG")]
+    [Display(Name = "Идентификатор в RAWG")]
     public int? RawgId { get; set; }
 
     [Display(Name = "Название")]
@@ -49,7 +49,7 @@ public partial class Game
     public int? PublisherId { get; set; }
 
     [Display(Name = "Жанр")]
-    [Range(1, int.MaxValue, ErrorMessage = "Выберите жанр.")]
+    [Range(1, 2147483647, ErrorMessage = "Выберите жанр.")]
     public int GenreId { get; set; }
 
     [Display(Name = "Активна")]

@@ -1,2 +1,17 @@
 ﻿<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
 <script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+<script>
+    $.extend($.validator.messages, {
+        required: "Поле обязательно для заполнения.",
+        email: "Введите корректный адрес электронной почты.",
+        number: "Введите число.",
+        digits: "Введите только цифры.",
+        minlength: $.validator.format("Введите не менее {0} символов."),
+        maxlength: $.validator.format("Введите не более {0} символов."),
+        rangelength: $.validator.format("Введите значение длиной от {0} до {1} символов."),
+        range: $.validator.format("Введите значение от {0} до {1}."),
+        min: $.validator.format("Введите значение не меньше {0}."),
+        max: $.validator.format("Введите значение не больше {0}."),
+        equalTo: "Значения должны совпадать."
+    });
+</script>
