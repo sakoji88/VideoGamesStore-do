@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -12,7 +12,9 @@ public partial class Publisher
     [Key]
     public int Id { get; set; }
 
-    [StringLength(150)]
+    [Display(Name = "Название издателя")]
+    [Required(ErrorMessage = "Укажите название издателя.")]
+    [StringLength(150, MinimumLength = 2, ErrorMessage = "Название издателя должно содержать от 2 до 150 символов.")]
     public string Name { get; set; } = null!;
 
     [InverseProperty("Publisher")]

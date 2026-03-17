@@ -8,13 +8,13 @@
 
     <div class="mb-3">
         <label asp-for="Title" class="form-label"></label>
-        <input asp-for="Title" class="form-control" />
+        <input asp-for="Title" class="form-control" maxlength="200" />
         <div class="form-text">Пример: Hogwarts Legacy</div>
         <span asp-validation-for="Title" class="text-danger"></span>
     </div>
     <div class="mb-3">
         <label asp-for="Description" class="form-label"></label>
-        <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+        <textarea asp-for="Description" class="form-control" rows="4" maxlength="4000"></textarea>
         <div class="form-text">Пример: Приключенческая RPG во вселенной Гарри Поттера.</div>
         <span asp-validation-for="Description" class="text-danger"></span>
     </div>
@@ -44,7 +44,7 @@
         <label class="form-label">Жанр</label>
         <select asp-for="GenreId" asp-items="ViewBag.Genres" class="form-select"></select>
         <div class="input-group mt-2">
-            <input name="genreName" form="addGenreForm" class="form-control" placeholder="Новый жанр" />
+            <input name="genreName" form="addGenreForm" class="form-control" placeholder="Новый жанр" minlength="2" maxlength="100" required />
             <button form="addGenreForm" class="btn btn-outline-secondary" type="submit">Добавить жанр</button>
         </div>
     </div>
@@ -52,7 +52,7 @@
         <label class="form-label">Издатель</label>
         <select asp-for="PublisherId" asp-items="ViewBag.Publishers" class="form-select"><option value="">Не указан</option></select>
         <div class="input-group mt-2">
-            <input name="publisherName" form="addPublisherForm" class="form-control" placeholder="Новый издатель" />
+            <input name="publisherName" form="addPublisherForm" class="form-control" placeholder="Новый издатель" minlength="2" maxlength="150" required />
             <button form="addPublisherForm" class="btn btn-outline-secondary" type="submit">Добавить издателя</button>
         </div>
     </div>
@@ -60,18 +60,18 @@
         <label class="form-label">Платформы</label>
         <select name="selectedPlatforms" asp-items="ViewBag.Platforms" multiple class="form-select"></select>
         <div class="input-group mt-2">
-            <input name="platformName" form="addPlatformForm" class="form-control" placeholder="Новая платформа" />
+            <input name="platformName" form="addPlatformForm" class="form-control" placeholder="Новая платформа" minlength="2" maxlength="100" required />
             <button form="addPlatformForm" class="btn btn-outline-secondary" type="submit">Добавить платформу</button>
         </div>
     </div>
     <div class="mb-3">
-        <label asp-for="CoverImageUrl" class="form-label"></label><input asp-for="CoverImageUrl" class="form-control" />
+        <label asp-for="CoverImageUrl" class="form-label"></label><input asp-for="CoverImageUrl" class="form-control" maxlength="500" />
         <div class="form-text">Пример: images/games/hogwarts.jpg</div>
         <span asp-validation-for="CoverImageUrl" class="text-danger"></span>
     </div>
     <div class="mb-3"><label asp-for="ReleaseDate" class="form-label"></label><input asp-for="ReleaseDate" type="date" class="form-control" /></div>
     <div class="mb-3">
-        <label asp-for="AgeRating" class="form-label"></label><input asp-for="AgeRating" class="form-control" />
+        <label asp-for="AgeRating" class="form-label"></label><input asp-for="AgeRating" class="form-control" maxlength="20" />
         <div class="form-text">Пример: 16+</div>
         <span asp-validation-for="AgeRating" class="text-danger"></span>
     </div>

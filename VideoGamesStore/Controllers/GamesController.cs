@@ -12,6 +12,7 @@ public class GamesController : Controller
 {
     private readonly VideoGamesStoreContext _context;
     private const int PageSize = 9;
+    private const int MetaNameMaxLength = 100;
     public GamesController(VideoGamesStoreContext context) => _context = context;
 
     public async Task<IActionResult> Index(string? searchString, int? genreId, int? publisherId, int[]? selectedPlatformIds, string? sortOrder, int page = 1)
@@ -79,6 +80,13 @@ public class GamesController : Controller
             return RedirectToAction(nameof(Details), new { id = gameId });
         }
 
+        var normalizedComment = string.IsNullOrWhiteSpace(comment) ? null : comment.Trim();
+        if (normalizedComment?.Length > 1000)
+        {
+            TempData["Error"] = "Комментарий не должен быть длиннее 1000 символов.";
+            return RedirectToAction(nameof(Details), new { id = gameId });
+        }
+
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (!int.TryParse(userIdClaim, out var userId)) return Forbid();
 
@@ -87,7 +95,7 @@ public class GamesController : Controller
             GameId = gameId,
             UserId = userId,
             Rating = rating,
-            Comment = string.IsNullOrWhiteSpace(comment) ? null : comment.Trim(),
+            Comment = normalizedComment,
             CreatedAt = DateTime.UtcNow,
             IsApproved = false
         });
@@ -108,11 +116,24 @@ public class GamesController : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> AddGenre(string genreName, string? returnAction = null, int? returnId = null)
     {
-        if (!string.IsNullOrWhiteSpace(genreName) && !await _context.Genres.AnyAsync(g => g.Name == genreName))
+        var normalizedName = NormalizeMetaName(genreName);
+        if (normalizedName is null)
         {
-            _context.Genres.Add(new Genre { Name = genreName.Trim() });
-            await _context.SaveChangesAsync();
+            TempData["Error"] = $"Название жанра должно содержать от 2 до {MetaNameMaxLength} символов.";
+            return RedirectToSafeAction(returnAction, returnId);
         }
+
+        if (!await _context.Genres.AnyAsync(g => g.Name == normalizedName))
+        {
+            _context.Genres.Add(new Genre { Name = normalizedName });
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Жанр добавлен.";
+        }
+        else
+        {
+            TempData["Error"] = "Такой жанр уже существует.";
+        }
+
         return RedirectToSafeAction(returnAction, returnId);
     }
 
@@ -120,11 +141,24 @@ public class GamesController : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> AddPublisher(string publisherName, string? returnAction = null, int? returnId = null)
     {
-        if (!string.IsNullOrWhiteSpace(publisherName) && !await _context.Publishers.AnyAsync(p => p.Name == publisherName))
+        var normalizedName = NormalizeMetaName(publisherName, 150);
+        if (normalizedName is null)
         {
-            _context.Publishers.Add(new Publisher { Name = publisherName.Trim() });
-            await _context.SaveChangesAsync();
+            TempData["Error"] = "Название издателя должно содержать от 2 до 150 символов.";
+            return RedirectToSafeAction(returnAction, returnId);
         }
+
+        if (!await _context.Publishers.AnyAsync(p => p.Name == normalizedName))
+        {
+            _context.Publishers.Add(new Publisher { Name = normalizedName });
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Издатель добавлен.";
+        }
+        else
+        {
+            TempData["Error"] = "Такой издатель уже существует.";
+        }
+
         return RedirectToSafeAction(returnAction, returnId);
     }
 
@@ -132,11 +166,24 @@ public class GamesController : Controller
     [HttpPost, ValidateAntiForgeryToken]
     public async Task<IActionResult> AddPlatform(string platformName, string? returnAction = null, int? returnId = null)
     {
-        if (!string.IsNullOrWhiteSpace(platformName) && !await _context.Platforms.AnyAsync(p => p.Name == platformName))
+        var normalizedName = NormalizeMetaName(platformName);
+        if (normalizedName is null)
         {
-            _context.Platforms.Add(new Platform { Name = platformName.Trim() });
-            await _context.SaveChangesAsync();
+            TempData["Error"] = $"Название платформы должно содержать от 2 до {MetaNameMaxLength} символов.";
+            return RedirectToSafeAction(returnAction, returnId);
         }
+
+        if (!await _context.Platforms.AnyAsync(p => p.Name == normalizedName))
+        {
+            _context.Platforms.Add(new Platform { Name = normalizedName });
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Платформа добавлена.";
+        }
+        else
+        {
+            TempData["Error"] = "Такая платформа уже существует.";
+        }
+
         return RedirectToSafeAction(returnAction, returnId);
     }
 
@@ -222,6 +269,13 @@ public class GamesController : Controller
         ViewBag.Genres = new SelectList(_context.Genres.OrderBy(g => g.Name), "Id", "Name", genreId);
         ViewBag.Publishers = new SelectList(_context.Publishers.OrderBy(p => p.Name), "Id", "Name", publisherId);
         ViewBag.Platforms = new MultiSelectList(_context.Platforms.OrderBy(p => p.Name), "Id", "Name", selectedPlatforms);
+    }
+
+    private static string? NormalizeMetaName(string? input, int maxLength = MetaNameMaxLength)
+    {
+        var value = input?.Trim();
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        return value.Length is < 2 or > maxLength ? null : value;
     }
 
     private IActionResult RedirectToSafeAction(string? returnAction, int? returnId)
