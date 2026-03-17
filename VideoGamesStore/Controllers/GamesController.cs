@@ -14,13 +14,16 @@ public class GamesController : Controller
     private const int PageSize = 9;
     public GamesController(VideoGamesStoreContext context) => _context = context;
 
-    public async Task<IActionResult> Index(string? searchString, int? genreId, int? platformId, string? sortOrder, int page = 1)
+    public async Task<IActionResult> Index(string? searchString, int? genreId, int? publisherId, int[]? selectedPlatformIds, string? sortOrder, int page = 1)
     {
         var gamesQuery = _context.Games.Include(g => g.Genre).Include(g => g.Publisher).Include(g => g.Platforms).AsQueryable();
+        selectedPlatformIds ??= [];
+
         if (!User.IsInRole("Admin")) gamesQuery = gamesQuery.Where(g => g.IsActive);
         if (!string.IsNullOrWhiteSpace(searchString)) gamesQuery = gamesQuery.Where(g => g.Title.Contains(searchString));
         if (genreId.HasValue) gamesQuery = gamesQuery.Where(g => g.GenreId == genreId.Value);
-        if (platformId.HasValue) gamesQuery = gamesQuery.Where(g => g.Platforms.Any(p => p.Id == platformId.Value));
+        if (publisherId.HasValue) gamesQuery = gamesQuery.Where(g => g.PublisherId == publisherId.Value);
+        if (selectedPlatformIds.Length > 0) gamesQuery = gamesQuery.Where(g => g.Platforms.Any(p => selectedPlatformIds.Contains(p.Id)));
 
         gamesQuery = sortOrder switch
         {
@@ -35,10 +38,12 @@ public class GamesController : Controller
         {
             Items = await gamesQuery.Skip((Math.Max(page, 1) - 1) * PageSize).Take(PageSize).ToListAsync(),
             Genres = new SelectList(await _context.Genres.OrderBy(g => g.Name).ToListAsync(), "Id", "Name", genreId),
-            Platforms = new SelectList(await _context.Platforms.OrderBy(p => p.Name).ToListAsync(), "Id", "Name", platformId),
+            Publishers = new SelectList(await _context.Publishers.OrderBy(p => p.Name).ToListAsync(), "Id", "Name", publisherId),
+            Platforms = new SelectList(await _context.Platforms.OrderBy(p => p.Name).ToListAsync(), "Id", "Name"),
             SearchString = searchString,
             GenreId = genreId,
-            PlatformId = platformId,
+            PublisherId = publisherId,
+            SelectedPlatformIds = selectedPlatformIds,
             SortOrder = sortOrder,
             Page = Math.Max(page, 1),
             TotalPages = (int)Math.Ceiling(total / (double)PageSize)
@@ -101,26 +106,38 @@ public class GamesController : Controller
 
     [Authorize(Roles = "Admin")]
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> AddGenre(string genreName)
+    public async Task<IActionResult> AddGenre(string genreName, string? returnAction = null, int? returnId = null)
     {
         if (!string.IsNullOrWhiteSpace(genreName) && !await _context.Genres.AnyAsync(g => g.Name == genreName))
         {
             _context.Genres.Add(new Genre { Name = genreName.Trim() });
             await _context.SaveChangesAsync();
         }
-        return RedirectToAction(nameof(Create));
+        return RedirectToSafeAction(returnAction, returnId);
     }
 
     [Authorize(Roles = "Admin")]
     [HttpPost, ValidateAntiForgeryToken]
-    public async Task<IActionResult> AddPublisher(string publisherName)
+    public async Task<IActionResult> AddPublisher(string publisherName, string? returnAction = null, int? returnId = null)
     {
         if (!string.IsNullOrWhiteSpace(publisherName) && !await _context.Publishers.AnyAsync(p => p.Name == publisherName))
         {
             _context.Publishers.Add(new Publisher { Name = publisherName.Trim() });
             await _context.SaveChangesAsync();
         }
-        return RedirectToAction(nameof(Create));
+        return RedirectToSafeAction(returnAction, returnId);
+    }
+
+    [Authorize(Roles = "Admin")]
+    [HttpPost, ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddPlatform(string platformName, string? returnAction = null, int? returnId = null)
+    {
+        if (!string.IsNullOrWhiteSpace(platformName) && !await _context.Platforms.AnyAsync(p => p.Name == platformName))
+        {
+            _context.Platforms.Add(new Platform { Name = platformName.Trim() });
+            await _context.SaveChangesAsync();
+        }
+        return RedirectToSafeAction(returnAction, returnId);
     }
 
     [Authorize(Roles = "Admin")]
@@ -205,5 +222,13 @@ public class GamesController : Controller
         ViewBag.Genres = new SelectList(_context.Genres.OrderBy(g => g.Name), "Id", "Name", genreId);
         ViewBag.Publishers = new SelectList(_context.Publishers.OrderBy(p => p.Name), "Id", "Name", publisherId);
         ViewBag.Platforms = new MultiSelectList(_context.Platforms.OrderBy(p => p.Name), "Id", "Name", selectedPlatforms);
+    }
+
+    private IActionResult RedirectToSafeAction(string? returnAction, int? returnId)
+    {
+        if (string.Equals(returnAction, nameof(Edit), StringComparison.OrdinalIgnoreCase) && returnId.HasValue)
+            return RedirectToAction(nameof(Edit), new { id = returnId.Value });
+
+        return RedirectToAction(nameof(Create));
     }
 }
