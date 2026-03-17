@@ -40,9 +40,30 @@
         </div>
     </div>
 
-    <div class="mb-3"><label class="form-label">Жанр</label><select asp-for="GenreId" asp-items="ViewBag.Genres" class="form-select"></select></div>
-    <div class="mb-3"><label class="form-label">Издатель</label><select asp-for="PublisherId" asp-items="ViewBag.Publishers" class="form-select"><option value="">Не указан</option></select></div>
-    <div class="mb-3"><label class="form-label">Платформы</label><select name="selectedPlatforms" asp-items="ViewBag.Platforms" multiple class="form-select"></select></div>
+    <div class="mb-3">
+        <label class="form-label">Жанр</label>
+        <select asp-for="GenreId" asp-items="ViewBag.Genres" class="form-select"></select>
+        <div class="input-group mt-2">
+            <input name="genreName" form="addGenreForm" class="form-control" placeholder="Новый жанр" />
+            <button form="addGenreForm" class="btn btn-outline-secondary" type="submit">Добавить жанр</button>
+        </div>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Издатель</label>
+        <select asp-for="PublisherId" asp-items="ViewBag.Publishers" class="form-select"><option value="">Не указан</option></select>
+        <div class="input-group mt-2">
+            <input name="publisherName" form="addPublisherForm" class="form-control" placeholder="Новый издатель" />
+            <button form="addPublisherForm" class="btn btn-outline-secondary" type="submit">Добавить издателя</button>
+        </div>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Платформы</label>
+        <select name="selectedPlatforms" asp-items="ViewBag.Platforms" multiple class="form-select"></select>
+        <div class="input-group mt-2">
+            <input name="platformName" form="addPlatformForm" class="form-control" placeholder="Новая платформа" />
+            <button form="addPlatformForm" class="btn btn-outline-secondary" type="submit">Добавить платформу</button>
+        </div>
+    </div>
 
     <div class="mb-3">
         <label asp-for="CoverImageUrl" class="form-label"></label>
@@ -60,4 +81,8 @@
     <div class="form-check mb-3"><input asp-for="IsActive" class="form-check-input" /><label asp-for="IsActive" class="form-check-label"></label></div>
     <button type="submit" class="btn btn-primary">Создать</button>
 </form>
+
+<form id="addGenreForm" asp-action="AddGenre" method="post">@Html.AntiForgeryToken()<input type="hidden" name="returnAction" value="Create" /></form>
+<form id="addPublisherForm" asp-action="AddPublisher" method="post">@Html.AntiForgeryToken()<input type="hidden" name="returnAction" value="Create" /></form>
+<form id="addPlatformForm" asp-action="AddPlatform" method="post">@Html.AntiForgeryToken()<input type="hidden" name="returnAction" value="Create" /></form>
 @section Scripts { <partial name="_ValidationScriptsPartial" /> }

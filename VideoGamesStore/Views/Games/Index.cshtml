@@ -8,15 +8,20 @@
 
 <form method="get" class="row g-3 mb-4">
     <div class="col-md-4"><input type="text" name="searchString" value="@Model.SearchString" class="form-control" placeholder="Поиск по названию" /></div>
-    <div class="col-md-3"><select name="genreId" asp-items="Model.Genres" class="form-select"><option value="">Все жанры</option></select></div>
-    <div class="col-md-3"><select name="platformId" asp-items="Model.Platforms" class="form-select"><option value="">Все платформы</option></select></div>
-    <div class="col-md-2"><button class="btn btn-primary w-100">Фильтр</button></div>
+    <div class="col-md-2"><select name="genreId" asp-items="Model.Genres" class="form-select"><option value="">Все жанры</option></select></div>
+    <div class="col-md-2"><select name="publisherId" asp-items="Model.Publishers" class="form-select"><option value="">Все издатели</option></select></div>
+    <div class="col-md-2">
+        <select name="selectedPlatformIds" asp-items="Model.Platforms" class="form-select" multiple>
+        </select>
+    </div>
+    <div class="col-md-1"><button class="btn btn-primary w-100">Фильтр</button></div>
+    <div class="col-md-1"><a asp-action="Index" class="btn btn-outline-secondary w-100">Сброс</a></div>
 </form>
 
 <div class="d-flex justify-content-between mb-3">
     <div class="btn-group">
-        <a asp-action="Index" asp-route-sortOrder="@(Model.SortOrder == "title_desc" ? "" : "title_desc")" asp-route-searchString="@Model.SearchString" asp-route-genreId="@Model.GenreId" asp-route-platformId="@Model.PlatformId" class="btn btn-outline-light">Название</a>
-        <a asp-action="Index" asp-route-sortOrder="@(Model.SortOrder == "price_asc" ? "price_desc" : "price_asc")" asp-route-searchString="@Model.SearchString" asp-route-genreId="@Model.GenreId" asp-route-platformId="@Model.PlatformId" class="btn btn-outline-light">Цена</a>
+        <a asp-action="Index" asp-route-sortOrder="@(Model.SortOrder == "title_desc" ? "" : "title_desc")" asp-route-searchString="@Model.SearchString" asp-route-genreId="@Model.GenreId" asp-route-publisherId="@Model.PublisherId" asp-route-selectedPlatformIds="@Model.SelectedPlatformIds" class="btn btn-outline-light">Название</a>
+        <a asp-action="Index" asp-route-sortOrder="@(Model.SortOrder == "price_asc" ? "price_desc" : "price_asc")" asp-route-searchString="@Model.SearchString" asp-route-genreId="@Model.GenreId" asp-route-publisherId="@Model.PublisherId" asp-route-selectedPlatformIds="@Model.SelectedPlatformIds" class="btn btn-outline-light">Цена</a>
     </div>
     @if (User.IsInRole("Admin")) { <a asp-action="Create" class="btn btn-success">Добавить игру</a> }
 </div>
@@ -55,7 +60,21 @@
 <nav class="mt-4"><ul class="pagination justify-content-center">
 @for (var i = 1; i <= Model.TotalPages; i++)
 {
-<li class="page-item @(Model.Page == i ? "active" : "")"><a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-searchString="@Model.SearchString" asp-route-genreId="@Model.GenreId" asp-route-platformId="@Model.PlatformId" asp-route-sortOrder="@Model.SortOrder">@i</a></li>
+<li class="page-item @(Model.Page == i ? "active" : "")"><a class="page-link" asp-action="Index" asp-route-page="@i" asp-route-searchString="@Model.SearchString" asp-route-genreId="@Model.GenreId" asp-route-publisherId="@Model.PublisherId" asp-route-selectedPlatformIds="@Model.SelectedPlatformIds" asp-route-sortOrder="@Model.SortOrder">@i</a></li>
 }
 </ul></nav>
+}
+
+@section Scripts {
+    <script>
+        (() => {
+            const selected = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.SelectedPlatformIds));
+            const platformSelect = document.querySelector('select[name="selectedPlatformIds"]');
+            if (!platformSelect || !Array.isArray(selected)) return;
+
+            Array.from(platformSelect.options).forEach(option => {
+                option.selected = selected.includes(Number(option.value));
+            });
+        })();
+    </script>
 }
