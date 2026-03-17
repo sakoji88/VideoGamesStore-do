@@ -7,7 +7,7 @@
 </section>
 
 <form method="get" class="row g-3 mb-4">
-    <div class="col-md-4"><input type="text" name="searchString" value="@Model.SearchString" class="form-control" placeholder="Поиск по названию" /></div>
+    <div class="col-md-4"><input type="text" name="searchString" value="@Model.SearchString" class="form-control" placeholder="Поиск по названию" maxlength="200" /></div>
     <div class="col-md-2"><select name="genreId" asp-items="Model.Genres" class="form-select"><option value="">Все жанры</option></select></div>
     <div class="col-md-2"><select name="publisherId" asp-items="Model.Publishers" class="form-select"><option value="">Все издатели</option></select></div>
     <div class="col-md-2">

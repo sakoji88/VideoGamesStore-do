@@ -22,13 +22,13 @@
     <div class="row">
         <div class="col-md-4 mb-3">
             <label asp-for="Price" class="form-label"></label>
-            <input asp-for="Price" class="form-control" type="number" min="0.01" step="0.01" />
+            <input asp-for="Price" class="form-control" type="number" min="0.01" max="999999.99" step="0.01" />
             <div class="form-text">Пример: 1999.99</div>
             <span asp-validation-for="Price" class="text-danger"></span>
         </div>
         <div class="col-md-4 mb-3">
             <label asp-for="Stock" class="form-label"></label>
-            <input asp-for="Stock" class="form-control" type="number" min="0" />
+            <input asp-for="Stock" class="form-control" type="number" min="0" max="100000" />
             <div class="form-text">Пример: 35</div>
             <span asp-validation-for="Stock" class="text-danger"></span>
         </div>
